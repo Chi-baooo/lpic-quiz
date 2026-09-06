@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 各ユーザー自身の学習履歴: 本人だけが読み書きできる
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 問題データ本体: ログイン済みのユーザーだけが「読み取り」できる。
+    // 書き込みはクライアントから一切できない(Admin SDKによる移行スクリプト経由のみ)。
+    // これにより、問題データがGitHub上の公開ファイルとして誰でも閲覧できる状態を防ぐ。
+    match /content/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "lpic-quiz-migration-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "問題データをFirestoreへ投入するための、開発者本人専用のローカル実行スクリプト。GitHub Pagesで配信される側のアプリ本体とは無関係です。",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

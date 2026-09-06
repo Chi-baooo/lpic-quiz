@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPIC-1 問題集 — baba study console</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===================== ログイン/新規登録画面 ===================== -->
+<div class="auth-wrap" id="authScreen">
+  <div class="prompt">baba@lpic<span style="color:var(--muted)">:~$</span> ./login<span class="cursor"></span></div>
+  <div class="auth-panel">
+    <h2 id="authTitle">ログイン</h2>
+    <div class="auth-sub" id="authSub">ユーザID(メールアドレス)とパスワードでログインしてください。</div>
+
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-info" id="authInfo"></div>
+
+    <div class="auth-field">
+      <label for="authEmail">ユーザID(メールアドレス)</label>
+      <input type="email" id="authEmail" autocomplete="username" placeholder="you@example.com">
+    </div>
+    <div class="auth-field">
+      <label for="authPassword">パスワード</label>
+      <input type="password" id="authPassword" autocomplete="current-password" placeholder="6文字以上">
+    </div>
+    <div class="auth-forgot"><a id="forgotLink">パスワードをお忘れですか?</a></div>
+
+    <div class="auth-actions">
+      <button class="btn" id="authSubmitBtn">ログイン</button>
+    </div>
+
+    <div class="auth-switch" id="authSwitch">
+      アカウントをお持ちでない場合は <a id="switchToSignup">新規登録</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== アプリ本体(ログイン後に表示) ===================== -->
+<div class="wrap" id="appScreen" hidden>
+  <div class="topbar">
+    <div class="prompt">baba@lpic<span style="color:var(--muted)">:~$</span> ./study --mode=quiz<span class="cursor"></span></div>
+    <div class="user-chip">
+      <span id="syncTag" class="sync-tag">未同期</span>
+      <span id="userEmailLabel"></span>
+      <button id="logoutBtn">ログアウト</button>
+    </div>
+  </div>
+  <h1>LPIC-1 問題集コンソール</h1>
+  <div class="subtitle">101(194問) + 102(239問) = 433問 / 抽出教材ベース ・ アカウントでPC・スマホ間を同期</div>
+
+  <div class="grid">
+    <div class="left">
+      <div class="panel">
+        <h2>フィルター</h2>
+        <fieldset>
+          <legend>試験</legend>
+          <div class="chip-row" id="examChips"></div>
+        </fieldset>
+        <fieldset>
+          <legend>キーワード検索(問題文・選択肢・解説を横断検索)</legend>
+          <input type="text" id="searchInput" placeholder="例: grep, /etc/passwd, chmod">
+        </fieldset>
+        <fieldset>
+          <legend>分野</legend>
+          <div class="chip-row" id="catChips"></div>
+        </fieldset>
+        <fieldset>
+          <legend>出題形式</legend>
+          <div class="chip-row" id="typeChips"></div>
+        </fieldset>
+        <fieldset>
+          <legend>復習フラグ</legend>
+          <div class="chip-row">
+            <label class="chip small" id="flagOnlyChip">
+              <input type="checkbox" id="flagOnlyCheck"> 🔖 フラグを付けた問題だけ出題
+            </label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>出題順</legend>
+          <select id="modeSelect">
+            <option value="shuffle" selected>シャッフル(毎回ランダム)</option>
+            <option value="sequential">順番通り</option>
+            <option value="weak">苦手優先(正答率が低い問題から)</option>
+            <option value="unseen">未回答優先</option>
+          </select>
+        </fieldset>
+        <fieldset>
+          <legend>出題数</legend>
+          <select id="countSelect">
+            <option value="all" selected>全問</option>
+            <option value="10">10問</option>
+            <option value="20">20問</option>
+            <option value="30">30問</option>
+            <option value="50">50問</option>
+            <option value="60">60問</option>
+            <option value="100">100問</option>
+          </select>
+        </fieldset>
+        <button class="btn" id="startBtn">この条件で開始 →</button>
+        <div style="height:12px;"></div>
+        <fieldset style="margin-bottom:0;">
+          <legend>模擬試験モード(90分タイマー付き・各対象分野を全て含む・シャッフル・記憶カードは含まない)</legend>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="btn ghost" id="mock101Btn" style="border-color:#8fd0e8; color:#8fd0e8;">🎯 101模試(60問/90分)</button>
+            <button class="btn ghost" id="mock102Btn" style="border-color:#c9a3e8; color:#c9a3e8;">🎯 102模試(60問/90分)</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="panel">
+        <h2>正答率ダッシュボード(単元ごとの正解数 / 総問題数)</h2>
+        <div class="stat-row"><span>全体</span><span id="overallStat">0 / 0</span></div>
+        <div class="bar-track"><div class="bar-fill" id="overallBar" style="width:0%"></div></div>
+        <div id="catStats"></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn ghost" id="exportBtn" style="flex:1;">進捗を書き出す(バックアップ)</button>
+          <button class="btn ghost" id="importBtn" style="flex:1;">進捗を読み込む</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+        <div id="ioMsg" style="font-size:11.5px; color:var(--muted); margin-top:8px; font-family: var(--mono); display:none;"></div>
+        <button class="btn ghost" id="resetBtn" style="margin-top:10px;">学習履歴をリセット</button>
+      </div>
+
+      <div class="panel">
+        <h2>出題形式別 正答率</h2>
+        <div id="typeStats"></div>
+      </div>
+
+      <div class="panel">
+        <h2>学習ログ(日別)</h2>
+        <div id="dailyStats" style="font-size:12px; font-family:var(--mono);"></div>
+      </div>
+
+      <div class="panel">
+        <h2>PC・スマホ間の同期について</h2>
+        <div style="font-size:12px; color:var(--muted); line-height:1.7;">
+          このアカウントでログインすれば、PCでもスマホでも同じ進捗(<span id="syncTag2" class="sync-tag" style="vertical-align:middle;">-</span>)が自動的に反映されます。手動での書き出し/読み込みは基本的に不要です。<br><br>
+          「進捗を書き出す/読み込む」は、①バックアップを取りたいとき、②以前のローカル保存版(localStorage版)の学習履歴をこのアカウントに引き継ぎたいとき、に使ってください。読み込みは既存データと合算されるため、上書きで消える心配はありません。
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="panel qcard" id="qcard">
+        <div class="empty-state">
+          <div class="big">左のフィルターを選んで「この条件で開始」を押してください</div>
+          <div>条件を絞り込むほど、狙った分野を集中的に演習できます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>進捗はこのアカウントに紐づいてクラウド上に保存されます。カテゴリ別の正答率は苦手分野の把握に使ってください。</footer>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
