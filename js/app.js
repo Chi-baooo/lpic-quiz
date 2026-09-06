@@ -1,8 +1,7 @@
-import { signUp, logIn, logOut, resetPassword, watchAuthState, authErrorMessage } from "./auth.js";
+import { logIn, logOut, resetPassword, watchAuthState, authErrorMessage } from "./auth.js";
 import { loadProgress, loadQuestionBank } from "./sync.js";
 import { initQuiz, teardownQuiz } from "./quiz.js";
 
-let mode = "login"; // "login" | "signup"
 let questionsPromise = null;
 
 // 問題データはGitHub上の公開ファイルではなく、ログイン必須のFirestoreから取得する。
@@ -15,29 +14,14 @@ function getQuestions() {
 }
 
 // ---------------------------------------------------------------
-// ログイン/新規登録フォームの表示切り替え
+// ログイン画面の初期表示
+// 新規登録の窓口はアプリ上には設けない(アカウントはFirebaseコンソールから
+// 管理者が手動で作成する運用。README参照)。
 // ---------------------------------------------------------------
-function setMode(next) {
-  mode = next;
-  clearAuthMessages();
-  const title = document.getElementById("authTitle");
-  const sub = document.getElementById("authSub");
-  const submitBtn = document.getElementById("authSubmitBtn");
-  const switchArea = document.getElementById("authSwitch");
-
-  if (mode === "login") {
-    title.textContent = "ログイン";
-    sub.textContent = "ユーザID(メールアドレス)とパスワードでログインしてください。";
-    submitBtn.textContent = "ログイン";
-    switchArea.innerHTML = `アカウントをお持ちでない場合は <a id="switchToSignup">新規登録</a>`;
-    document.getElementById("switchToSignup").addEventListener("click", () => setMode("signup"));
-  } else {
-    title.textContent = "新規登録";
-    sub.textContent = "ユーザID(メールアドレス)とパスワード(6文字以上)を決めてください。";
-    submitBtn.textContent = "アカウントを作成";
-    switchArea.innerHTML = `アカウントをお持ちの場合は <a id="switchToLogin">ログイン</a>`;
-    document.getElementById("switchToLogin").addEventListener("click", () => setMode("login"));
-  }
+function initAuthScreenTexts() {
+  document.getElementById("authTitle").textContent = "ログイン";
+  document.getElementById("authSub").textContent = "ユーザID(メールアドレス)とパスワードでログインしてください。";
+  document.getElementById("authSubmitBtn").textContent = "ログイン";
 }
 
 function clearAuthMessages() {
@@ -70,11 +54,7 @@ document.getElementById("authSubmitBtn").addEventListener("click", async () => {
   const btn = document.getElementById("authSubmitBtn");
   btn.disabled = true;
   try {
-    if (mode === "login") {
-      await logIn(email, password);
-    } else {
-      await signUp(email, password);
-    }
+    await logIn(email, password);
     // 成功後の画面切り替えは watchAuthState 側で行う
   } catch (err) {
     showAuthError(authErrorMessage(err));
@@ -102,11 +82,7 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
   await logOut();
 });
 
-setMode("login");
-
-// ---------------------------------------------------------------
-// ログイン状態の監視:ログインしたらアプリ画面へ、ログアウトしたらログイン画面へ
-// ---------------------------------------------------------------
+initAuthScreenTexts();
 watchAuthState(async (user) => {
   const authScreen = document.getElementById("authScreen");
   const appScreen = document.getElementById("appScreen");
@@ -130,6 +106,6 @@ watchAuthState(async (user) => {
     authScreen.hidden = false;
     document.getElementById("authEmail").value = "";
     document.getElementById("authPassword").value = "";
-    setMode("login");
+    clearAuthMessages();
   }
 });
