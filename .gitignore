@@ -1,0 +1,9 @@
+# 秘密鍵・認証情報は絶対にコミットしない
+scripts/serviceAccountKey.json
+
+# 問題データ本体はFirestoreにのみ保存する(GitHub上には置かない)
+scripts/questions.json
+data/questions.json
+
+# 依存パッケージ
+node_modules/
