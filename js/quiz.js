@@ -8,7 +8,7 @@ const TYPE_LABEL = { single: "単一選択", multi: "複数選択", fill: "記�
 let EXAM_CATS = {};
 const catChipEls = {};
 
-let filters = { exam: new Set(["101", "102"]), cat: new Set(), type: new Set(["single", "multi", "fill", "note"]), flaggedOnly: false, search: "" };
+let filters = { exam: new Set(), cat: new Set(), type: new Set(["single", "multi", "fill", "note"]), flaggedOnly: false, search: "" };
 let queue = [];
 let qIndex = 0;
 let stats = {}; // id -> {attempts, correct, lastCorrect}
@@ -35,7 +35,7 @@ export function initQuiz(uid, questions, progress) {
   ALL_Q.forEach((q) => {
     (EXAM_CATS[q.exam] ||= new Set()).add(q.category);
   });
-  filters = { exam: new Set(["101", "102"]), cat: new Set(CATS), type: new Set(["single", "multi", "fill", "note"]), flaggedOnly: false, search: "" };
+  filters = { exam: new Set(), cat: new Set(), type: new Set(["single", "multi", "fill", "note"]), flaggedOnly: false, search: "" };
 
   stats = progress.stats || {};
   flagged = new Set(progress.flags || []);
@@ -105,8 +105,8 @@ function buildChips() {
   examBox.innerHTML = "";
   ["101", "102"].forEach((ex) => {
     const el = document.createElement("label");
-    el.className = "chip on";
-    el.innerHTML = `<input type="checkbox" checked data-exam="${ex}"> 第${ex}試験`;
+    el.className = "chip";
+    el.innerHTML = `<input type="checkbox" data-exam="${ex}"> 第${ex}試験`;
     el.querySelector("input").addEventListener("change", (e) => {
       if (e.target.checked) filters.exam.add(ex);
       else filters.exam.delete(ex);
@@ -149,15 +149,18 @@ function buildChips() {
 function syncCategoryChips() {
   const allowed = new Set();
   filters.exam.forEach((ex) => (EXAM_CATS[ex] || new Set()).forEach((c) => allowed.add(c)));
-  filters.cat = new Set(allowed);
+  // 選択中の試験に属さなくなった分野だけfilters.catから除去する(許可された分野の自動選択はしない)
+  filters.cat.forEach((c) => {
+    if (!allowed.has(c)) filters.cat.delete(c);
+  });
   CATS.forEach((cat) => {
     const el = catChipEls[cat];
     if (!el) return;
     const input = el.querySelector("input");
     const isAllowed = allowed.has(cat);
-    input.checked = isAllowed;
+    if (!isAllowed) input.checked = false;
     input.disabled = !isAllowed;
-    el.classList.toggle("on", isAllowed);
+    el.classList.toggle("on", input.checked);
     el.style.opacity = isAllowed ? "1" : "0.35";
     el.style.cursor = isAllowed ? "pointer" : "default";
   });
@@ -366,6 +369,8 @@ function renderQuestion() {
   }
 
   const isFlagged = flagged.has(q.id);
+  const qStats = stats[q.id];
+  const historyLabel = !qStats || qStats.attempts === 0 ? "初出題" : `正解${qStats.correct}回/不正解${qStats.attempts - qStats.correct}回`;
   card.innerHTML = `
     <div class="qmeta">
       <span class="tag exam${q.exam}">第${q.exam}試験</span>
@@ -374,6 +379,7 @@ function renderQuestion() {
       ${isMockExam ? '<span class="tag timer-tag" id="timerTag">⏱ --:--</span>' : ""}
       <button id="flagBtn" class="tag" style="cursor:pointer; border-color:${isFlagged ? "var(--amber)" : "var(--line)"}; color:${isFlagged ? "var(--amber)" : "var(--muted)"};">${isFlagged ? "★ フラグ済み" : "☆ フラグを付ける"}</button>
       <span class="tag progress-pill">${qIndex + 1} / ${queue.length}</span>
+      <span class="tag">${historyLabel}</span>
     </div>
     <div class="qtext">${escapeHtml(q.question)}</div>
     ${bodyHtml}

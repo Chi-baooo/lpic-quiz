@@ -57,6 +57,7 @@
   }
   @media (max-width: 760px){
     .grid{ grid-template-columns: 1fr; }
+    .right{ order: -1; }
   }
 
   .panel{
