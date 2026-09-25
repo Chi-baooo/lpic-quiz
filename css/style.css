@@ -134,6 +134,10 @@
   .cat-row{ margin-bottom:9px; }
   .cat-row .label{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
   .cat-row .label span:last-child{ color:var(--muted); font-family:var(--mono); }
+  .weak-badge{ display:inline-block; margin-left:6px; padding:1px 6px; border-radius:10px; font-size:10.5px; font-family:var(--sans); border:1px solid var(--line); color:var(--muted); }
+  .weak-badge.weak{ color:var(--coral); border-color:var(--coral); background:var(--coral-dim); }
+  .weak-badge.caution{ color:var(--amber); border-color:var(--amber); background:var(--amber-dim); }
+  .weak-badge.good{ color:var(--teal); border-color:var(--teal); background:var(--teal-dim); }
 
   /* Question card */
   .qcard{ min-height: 380px; display:flex; flex-direction:column; }

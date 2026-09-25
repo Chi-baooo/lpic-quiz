@@ -172,6 +172,14 @@ function acc(id) {
   return s.correct / s.attempts;
 }
 
+// 苦手分析: 正答率のしきい値による判定(70%以上=OK, 60〜70%=要注意, 60%未満=苦手)
+function weakBadge(rate) {
+  if (rate === null) return { label: "未挑戦", cls: "" };
+  if (rate < 0.6) return { label: "苦手", cls: "weak" };
+  if (rate < 0.7) return { label: "要注意", cls: "caution" };
+  return { label: "OK", cls: "good" };
+}
+
 function buildQueue() {
   let list = ALL_Q.filter((q) => filters.exam.has(q.exam) && filters.cat.has(q.category) && filters.type.has(q.type));
   if (filters.flaggedOnly) {
@@ -285,9 +293,18 @@ function renderDashboard() {
     totalPool += poolSize;
     totalMastered += mastered;
     const pct = poolSize > 0 ? Math.round((mastered / poolSize) * 100) : 0;
+
+    // 苦手分析: 分野内の全解答試行を集計した正答率(直近の正誤だけでなく累積)で判定する
+    const attempted = qsInCat.filter((q) => stats[q.id] && stats[q.id].attempts > 0);
+    const totalAttempts = attempted.reduce((s, q) => s + stats[q.id].attempts, 0);
+    const totalCorrect = attempted.reduce((s, q) => s + stats[q.id].correct, 0);
+    const catRate = totalAttempts > 0 ? totalCorrect / totalAttempts : null;
+    const badge = weakBadge(catRate);
+    const rateText = catRate === null ? "" : `正答率${Math.round(catRate * 100)}%`;
+
     const row = document.createElement("div");
     row.className = "cat-row";
-    row.innerHTML = `<div class="label"><span>${cat}(全${poolSize}問)</span><span>${mastered} / ${poolSize}</span></div>
+    row.innerHTML = `<div class="label"><span>${cat}(全${poolSize}問)</span><span>${mastered} / ${poolSize}${rateText ? " ・ " + rateText : ""} <span class="weak-badge ${badge.cls}">${badge.label}</span></span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
     catBox.appendChild(row);
   });
