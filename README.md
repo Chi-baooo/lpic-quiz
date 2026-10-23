@@ -66,7 +66,7 @@ export const firebaseConfig = {
 
 ### 1. サービスアカウントキーを取得する
 1. Firebaseコンソール → 歯車アイコン →「プロジェクトの設定」→「サービス アカウント」タブ。
-2. 「新しい秘密鍵の生成」をクリックし、ダウンロードされたJSONファイルを `scripts/serviceAccountKey.json` という名前でこのリポジトリの `scripts/` フォルダに保存します。
+2. 「新しい秘密鍵の生成」をクリックし、ダウンロードされたJSONファイルを `serviceAccountKey.json` という名前で、**OneDriveなどクラウド同期の外**の `C:\Users\<ユーザー名>\.secrets\lpic-quiz\` に保存します(別の場所に置く場合は環境変数 `SERVICE_ACCOUNT_KEY_PATH` でパスを指定します)。
 3. **このファイルは絶対にGitHubにアップロードしないでください**(`.gitignore`で除外済みですが、念のためご注意ください)。
 
 ### 2. 問題データファイルを配置する

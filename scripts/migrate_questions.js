@@ -10,8 +10,8 @@
  *      (問題データファイル。GitHubにはアップロードしないこと)
  *   2. Firebaseコンソール → 歯車アイコン → プロジェクトの設定 →
  *      「サービス アカウント」タブ → 「新しい秘密鍵の生成」でJSONをダウンロードし、
- *      scripts/serviceAccountKey.json という名前でこのフォルダに保存する
- *      (このファイルもGitHubにアップロードしないこと。.gitignoreで除外済み)
+ *      C:\Users\<ユーザー名>\.secrets\lpic-quiz\serviceAccountKey.json に保存する
+ *      (OneDriveなどクラウド同期されるフォルダには置かないこと。GitHubにもアップロードしないこと)
  *   3. ターミナルで scripts フォルダに移動し、以下を実行:
  *        npm install firebase-admin
  *        node migrate_questions.js
@@ -22,15 +22,19 @@
  */
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const admin = require("firebase-admin");
 
-const keyPath = path.join(__dirname, "serviceAccountKey.json");
+// 秘密鍵はOneDrive(クラウド同期)の外に置く。環境変数 SERVICE_ACCOUNT_KEY_PATH で上書きも可能
+const keyPath =
+  process.env.SERVICE_ACCOUNT_KEY_PATH ||
+  path.join(os.homedir(), ".secrets", "lpic-quiz", "serviceAccountKey.json");
 const dataPath = path.join(__dirname, "questions.json");
 
 if (!fs.existsSync(keyPath)) {
   console.error(
-    "serviceAccountKey.json が見つかりません。READMEの手順に従って、Firebaseコンソールからダウンロードしたキーをscripts/フォルダに置いてください。"
+    `サービスアカウントキーが見つかりません: ${keyPath}\nFirebaseコンソールからダウンロードしたキーを、このパスに置いてください(OneDrive/scripts/フォルダには置かない)。`
   );
   process.exit(1);
 }
